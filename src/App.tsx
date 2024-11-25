@@ -52,7 +52,7 @@ function App() {
               </PrivateRoute>
             }
           />
-
+ <SpeedInsights />
         </Routes>
       </div>
     </Router>
