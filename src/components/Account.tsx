@@ -186,12 +186,12 @@ export const Account: React.FC = () => {
                             <label className="inline-flex items-center text-white">
                                 <input
                                     type="radio"
-                                    value="Moded"
+                                    value="Modded"
                                     checked={formData.server_type === 'Moded'}
                                     onChange={(e) => handleInputChange('server_type', e.target.value)}
                                     className="form-radio"
                                 />
-                                <span className="ml-2">Moded</span>
+                                <span className="ml-2">Modded</span>
                             </label>
                         </div>
                     </div>
