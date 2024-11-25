@@ -5,7 +5,7 @@ import { RatedServers } from './components/RatedServers';
 import { useAuthStore } from './store/authStore';
 import MenuBar from './components/MenuBar';
 import Account from './components/Account';
-import { SpeedInsights } from "@vercel/speed-insights/react"
+
 const PrivateRoute = ({
   children,
   isAuthenticated,
@@ -51,7 +51,7 @@ function App() {
               </PrivateRoute>
             }
           />
- <SpeedInsights />
+
         </Routes>
       </div>
     </Router>
