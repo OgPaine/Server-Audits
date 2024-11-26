@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, Mail, LogIn, X, Loader } from "lucide-react";
-import { useAuthStore } from "../store/authStore";
-import { supabase } from "../api/supabase";
+import { useAuthStore } from "../../store/authStore";
+import { supabase } from "../../api/supabase";
 
 interface LoginProps {
   isOpen: boolean;

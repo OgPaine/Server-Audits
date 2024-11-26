@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
-import { supabase } from '../api/supabase';
+import { supabase } from '../../api/supabase';
 import type { User } from '@supabase/auth-js';
 
 export const ServerForm: React.FC = () => {

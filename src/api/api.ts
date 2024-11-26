@@ -24,7 +24,6 @@ export const logoutUser = async (): Promise<void> => {
   }
 }
 
-// Fetch server submissions
 export const fetchServerSubmissions = async (): Promise<ServerSubmission[]> => {
   const { data, error } = await supabase
     .from('server_submissions')
@@ -37,24 +36,10 @@ export const fetchServerSubmissions = async (): Promise<ServerSubmission[]> => {
   return data || []
 }
 
-// Add a new server submission
 export const createServerSubmission = async (submission: Partial<ServerSubmission>) => {
   const { data, error } = await supabase
     .from('server_submissions')
     .insert([submission])
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return data
-}
-
-export const updateServerStatus = async (id: string, status: 'approved' | 'rejected') => {
-  const { data, error } = await supabase
-    .from('server_submissions')
-    .update({ status })
-    .eq('id', id)
 
   if (error) {
     throw new Error(error.message)

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { useSubmissionStore } from '../store/submissionStore'
-import { useAuthStore } from '../store/authStore'
+import { useSubmissionStore } from '../../store/submissionStore'
+import { useAuthStore } from '../../store/authStore'
 import { Icon } from '@iconify/react'
-import { ServerSubmission, supabase } from '../api/supabase'
+import { ServerSubmission, supabase } from '../../api/supabase'
 
 export const AdminPanel: React.FC = () => {
   const { submissions, isLoading, error, fetchSubmissions } = useSubmissionStore()

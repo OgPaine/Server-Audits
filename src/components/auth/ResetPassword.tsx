@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Loader, KeyRound } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
-import { supabase } from '../api/supabase';
+import { useAuthStore } from '../../store/authStore';
+import { supabase } from '../../api/supabase';
 
 interface InputFieldProps {
   type: string;

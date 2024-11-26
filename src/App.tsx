@@ -1,12 +1,14 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ServerForm } from './components/ServerForm';
-import { AdminPanel } from './components/AdminPanel';
-import { RatedServers } from './components/RatedServers';
-import { useAuthStore } from './store/authStore';
-import MenuBar from './components/MenuBar';
-import Account from './components/Account';
-import ResetPassword from './components/ResetPassword';
+// src/App.tsx
 
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ServerForm } from './components/server/ServerForm';
+import { AdminPanel } from './components/admin/AdminPanel';
+import RatedServers from './components/server/RatedServers';
+import { useAuthStore } from './store/authStore';
+import MenuBar from './components/layout/MenuBar';
+import Account from './components/Account';
+import ResetPassword from './components/auth/ResetPassword';
+import Footer from './components/layout/Footer';  
 
 const PrivateRoute = ({
   children,
@@ -19,7 +21,7 @@ const PrivateRoute = ({
 };
 
 function App() {
-  const { isAuthenticated, isAdmin ,isUser} = useAuthStore((state) => ({
+  const { isAuthenticated, isAdmin, isUser } = useAuthStore((state) => ({
     isAuthenticated: state.isAuthenticated,
     isAdmin: state.isAdmin,
     isUser: state.isUser,
@@ -34,9 +36,7 @@ function App() {
 
         <Routes>
           <Route path="/" element={<ServerForm />} />
-
           <Route path="/rated-servers" element={<RatedServers />} />
-
           <Route
             path="/admin"
             element={
@@ -45,7 +45,6 @@ function App() {
               </PrivateRoute>
             }
           />
-
           <Route
             path="/account"
             element={
@@ -55,8 +54,9 @@ function App() {
             }
           />
           <Route path="/reset-password" element={<ResetPassword />} />
-
         </Routes>
+
+        <Footer />  
       </div>
     </Router>
   );

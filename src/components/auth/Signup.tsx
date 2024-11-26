@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, UserPlus, X } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../../store/authStore';
 
 interface SignupProps {
   isOpen: boolean;
@@ -148,7 +148,7 @@ const Signup: React.FC<SignupProps> = ({ isOpen, onClose, onLoginClick }) => {
           <button
             type="submit"
             className="flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            disabled={isLoading} // Disable the button when loading
+            disabled={isLoading} 
           >
             {isLoading ? "Creating account..." : "Sign up"}
           </button>
