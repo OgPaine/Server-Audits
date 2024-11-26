@@ -7,9 +7,10 @@ interface MenuBarProps {
   isAuthenticated: boolean;
   logout: () => void;
   isAdmin: boolean;
+  isUser: boolean;
 }
 
-const MenuBar: React.FC<MenuBarProps> = ({ isAuthenticated, logout, isAdmin }) => {
+const MenuBar: React.FC<MenuBarProps> = ({ isAuthenticated, logout, isAdmin, isUser }) => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
 
@@ -37,13 +38,13 @@ const MenuBar: React.FC<MenuBarProps> = ({ isAuthenticated, logout, isAdmin }) =
               Rated Servers
             </Link>
 
-            {isAuthenticated && isAdmin && (
+            {isAdmin && (
               <Link to="/admin" className="font-bold text-white hover:text-gray-300">
                 Admin Panel
               </Link>
             )}
 
-            {isAuthenticated && isAdmin && (
+            {isAuthenticated && isUser && (
               <Link to="/account" className="font-bold text-white hover:text-gray-300">
                 Account
               </Link>
@@ -51,8 +52,8 @@ const MenuBar: React.FC<MenuBarProps> = ({ isAuthenticated, logout, isAdmin }) =
           </div>
 
           {isAuthenticated ? (
-            <button 
-              onClick={logout} 
+            <button
+              onClick={logout}
               className="px-4 py-2 text-white bg-red-600 rounded hover:bg-red-700"
             >
               Logout
@@ -68,14 +69,14 @@ const MenuBar: React.FC<MenuBarProps> = ({ isAuthenticated, logout, isAdmin }) =
         </div>
       </div>
 
-      <Login 
-        isOpen={isLoginOpen} 
+      <Login
+        isOpen={isLoginOpen}
         onClose={() => setIsLoginOpen(false)}
         onSignupClick={handleOpenSignup}
       />
-      
-      <Signup 
-        isOpen={isSignupOpen} 
+
+      <Signup
+        isOpen={isSignupOpen}
         onClose={() => setIsSignupOpen(false)}
         onLoginClick={handleOpenLogin}
       />

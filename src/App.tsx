@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ServerForm } from './components/ServerForm';
 import { AdminPanel } from './components/AdminPanel';
-import { RatedServers } from './components/RatedServers'; 
+import { RatedServers } from './components/RatedServers';
 import { useAuthStore } from './store/authStore';
 import MenuBar from './components/MenuBar';
 import Account from './components/Account';
+import ResetPassword from './components/ResetPassword';
+
 
 const PrivateRoute = ({
   children,
@@ -17,9 +19,10 @@ const PrivateRoute = ({
 };
 
 function App() {
-  const { isAuthenticated, isAdmin } = useAuthStore((state) => ({
+  const { isAuthenticated, isAdmin ,isUser} = useAuthStore((state) => ({
     isAuthenticated: state.isAuthenticated,
     isAdmin: state.isAdmin,
+    isUser: state.isUser,
   }));
 
   const logout = useAuthStore.getState().logout;
@@ -27,7 +30,7 @@ function App() {
   return (
     <Router>
       <div className="full-height-gradient">
-        <MenuBar isAuthenticated={isAuthenticated} logout={logout} isAdmin={isAdmin} />
+        <MenuBar isAuthenticated={isAuthenticated} logout={logout} isAdmin={isAdmin} isUser={isUser} />
 
         <Routes>
           <Route path="/" element={<ServerForm />} />
@@ -51,6 +54,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
         </Routes>
       </div>

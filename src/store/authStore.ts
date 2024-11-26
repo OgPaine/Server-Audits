@@ -10,17 +10,20 @@ interface AuthStore {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isUser: boolean;
+  sessionExpiration: number | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   checkAuth: () => Promise<void>;
+  checkSessionExpiration: () => void;
   resetError: () => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
   persist(
-    (set) => {
+    (set, get) => {
       let authListener: (() => void) | null = null;
 
       return {
@@ -30,6 +33,19 @@ export const useAuthStore = create<AuthStore>()(
         user: null,
         session: null,
         isAdmin: false,
+        isUser: false,
+        sessionExpiration: null,
+
+        checkSessionExpiration: () => {
+          const { session, logout } = get();
+          if (session && session.expires_at) {
+            const currentTime = Math.floor(Date.now() / 1000);
+            if (session.expires_at < currentTime) {
+              console.warn('Session expired. Logging out.');
+              logout();
+            }
+          }
+        },
 
         checkAuth: async () => {
           try {
@@ -43,6 +59,8 @@ export const useAuthStore = create<AuthStore>()(
               user: session?.user ?? null,
               session,
               isAdmin: userRole === 'admin',
+              isUser: userRole === 'user',
+              sessionExpiration: session?.expires_at || null,
             });
 
             if (authListener) {
@@ -57,6 +75,8 @@ export const useAuthStore = create<AuthStore>()(
                   user: session?.user ?? null,
                   session,
                   isAdmin: userRole === 'admin',
+                  isUser: userRole === 'user',
+                  sessionExpiration: session?.expires_at || null,
                 });
               }
             );
@@ -71,6 +91,8 @@ export const useAuthStore = create<AuthStore>()(
                 user: null,
                 session: null,
                 isAdmin: false,
+                isUser: false,
+                sessionExpiration: null,
               });
             } else {
               console.error('Unexpected error:', error);
@@ -87,7 +109,7 @@ export const useAuthStore = create<AuthStore>()(
               password,
               options: {
                 data: {
-                  role: 'user', 
+                  role: 'user',
                 },
               },
             });
@@ -107,6 +129,8 @@ export const useAuthStore = create<AuthStore>()(
               user: data.user,
               session: data.session,
               isAdmin: false,
+              isUser: true,
+              sessionExpiration: data.session.expires_at || null,
               error: null,
             });
           } catch (error) {
@@ -118,6 +142,8 @@ export const useAuthStore = create<AuthStore>()(
                 user: null,
                 session: null,
                 isAdmin: false,
+                isUser: false,
+                sessionExpiration: null,
               });
             } else {
               console.error('Unexpected signup error:', error);
@@ -172,6 +198,8 @@ export const useAuthStore = create<AuthStore>()(
               user: data.user,
               session: data.session,
               isAdmin: userRole === 'admin',
+              isUser: userRole === 'user',
+              sessionExpiration: data.session.expires_at || null,
               error: null,
             });
           } catch (error) {
@@ -183,6 +211,8 @@ export const useAuthStore = create<AuthStore>()(
                 user: null,
                 session: null,
                 isAdmin: false,
+                isUser: false,
+                sessionExpiration: null,
               });
             } else {
               console.error('Unexpected login error:', error);
@@ -206,6 +236,8 @@ export const useAuthStore = create<AuthStore>()(
               session: null,
               error: null,
               isAdmin: false,
+              isUser: false,
+              sessionExpiration: null,
             });
           } catch (error) {
             if (error instanceof Error) {
@@ -232,7 +264,15 @@ export const useAuthStore = create<AuthStore>()(
         user: state.user,
         session: state.session,
         isAdmin: state.isAdmin,
+        isUser: state.isUser,
+        sessionExpiration: state.sessionExpiration,
       }),
     }
   )
 );
+
+// Periodically check session expiration
+setInterval(() => {
+  const authStore = useAuthStore.getState();
+  authStore.checkSessionExpiration();
+}, 60 * 1000);

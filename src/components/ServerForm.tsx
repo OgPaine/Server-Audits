@@ -59,7 +59,7 @@ export const ServerForm: React.FC = () => {
         website: formData.website || null,
         discord: formData.discord || null,
         content_warning: formData.contentWarning,
-        uid: user?.id || null, 
+        uid: user?.id || null,
         created_at: new Date().toISOString(),
         rating: '',
         notes: '',
@@ -92,6 +92,10 @@ export const ServerForm: React.FC = () => {
 
   return (
     <div >
+      <div className="items-center justify-center max-w-2xl p-6 mx-auto mb-4 font-bold text-gray-300 bg-gray-800 rounded-sm shadow-xl text-wrap">
+        If you want to add me as an admin on your server so I can really dive into things, feel free to add my steam64id to your ownerid list (Don't forget to writecfg) <span className='items-center justify-center pt-4 text-center'>76561198040218052</span>
+      </div>
+
       <div className="items-center justify-center max-w-2xl p-6 mx-auto bg-gray-800 rounded-sm shadow-xl">
         <h2 className="mb-6 text-3xl font-bold text-white">Submit Your Rust Server</h2>
 
@@ -239,8 +243,8 @@ export const ServerForm: React.FC = () => {
             type="submit"
             disabled={isSubmitting}
             className={`w-full py-3 px-5 text-white font-semibold rounded-sm flex items-center justify-center shadow-md hover:shadow-lg transition-shadow ${isSubmitting
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out'
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out'
               }`}
           >
             {isSubmitting ? 'Submitting...' : (
