@@ -7,10 +7,9 @@ interface MenuBarProps {
   isAuthenticated: boolean;
   logout: () => void;
   isAdmin: boolean;
-  isUser: boolean;
 }
 
-const MenuBar: React.FC<MenuBarProps> = ({ isAuthenticated, logout, isAdmin, isUser }) => {
+const MenuBar: React.FC<MenuBarProps> = ({ isAuthenticated, logout, isAdmin}) => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
 
@@ -31,22 +30,22 @@ const MenuBar: React.FC<MenuBarProps> = ({ isAuthenticated, logout, isAdmin, isU
           <h1 className="text-2xl font-bold text-white">strbull Server Audits</h1>
 
           <div className="flex gap-6">
-            <Link to="/" className="font-bold text-white hover:text-gray-300">
+            <Link to="/" className="font-extrabold text-white hover:text-gray-300">
               Submit Server
             </Link>
-            <Link to="/rated-servers" className="font-bold text-white hover:text-gray-300">
+            <Link to="/rated-servers" className="font-extrabold text-white hover:text-gray-300">
               Rated Servers
             </Link>
-
-            {isAdmin && (
-              <Link to="/admin" className="font-bold text-white hover:text-gray-300">
-                Admin Panel
+            
+            {isAuthenticated &&  (
+              <Link to="/account" className="font-extrabold text-white hover:text-gray-300">
+                Account
               </Link>
             )}
 
-            {isAuthenticated && isUser && (
-              <Link to="/account" className="font-bold text-white hover:text-gray-300">
-                Account
+            {isAdmin && (
+              <Link to="/admin" className="font-extrabold text-white hover:text-gray-300">
+                Admin Panel
               </Link>
             )}
           </div>

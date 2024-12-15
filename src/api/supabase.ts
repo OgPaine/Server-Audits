@@ -15,27 +15,34 @@ export type User = {
 };
 
 export type ServerSubmission = {
-  id: string
-  created_at: string
-  server_type: 'Vanilla' | 'Modded'
-  description: string
-  name: string
-  server_ip: string
-  website?: string
-  discord?: string
-  content_warning: 'Yes' | 'No'
-  rating: string
-  notes: string
-  rank: 'Unranked' | 'Ranked'
-  reviewed_at?: string
-  uid: string
-
-}
+  id: string;
+  created_at: string;
+  server_type: 'Vanilla' | 'Modded';
+  description: string;
+  name: string;
+  server_ip: string;
+  website?: string;
+  discord?: string;
+  content_warning: 'Yes' | 'No';
+  rating: string;
+  notes: string;
+  rank: 'Unranked' | 'Ranked';
+  reviewed_at?: string;
+  uid: string;
+};
 
 export type Server = {
-  id: string
-  name: string
-  ip_address: string
-  status: 'active' | 'inactive'
-  created_at: string
-}
+  id: string;
+  name: string;
+  ip_address: string;
+  status: 'active' | 'inactive';
+  created_at: string;
+};
+
+export type ServerRating = {
+  id: string;
+  server_id: string;
+  user_id: string;
+  rating: number;
+  created_at: string;
+};

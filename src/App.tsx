@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ServerForm } from './components/server/ServerForm';
 import { AdminPanel } from './components/admin/AdminPanel';
@@ -8,7 +6,7 @@ import { useAuthStore } from './store/authStore';
 import MenuBar from './components/layout/MenuBar';
 import Account from './components/Account';
 import ResetPassword from './components/auth/ResetPassword';
-import Footer from './components/layout/Footer';  
+import Footer from './components/layout/Footer';
 
 const PrivateRoute = ({
   children,
@@ -21,7 +19,7 @@ const PrivateRoute = ({
 };
 
 function App() {
-  const { isAuthenticated, isAdmin, isUser } = useAuthStore((state) => ({
+  const { isAuthenticated, isAdmin } = useAuthStore((state) => ({
     isAuthenticated: state.isAuthenticated,
     isAdmin: state.isAdmin,
     isUser: state.isUser,
@@ -31,32 +29,37 @@ function App() {
 
   return (
     <Router>
-      <div className="full-height-gradient">
-        <MenuBar isAuthenticated={isAuthenticated} logout={logout} isAdmin={isAdmin} isUser={isUser} />
+      <div className="flex flex-col min-h-screen full-height-gradient">
+        {/* Header/Menu */}
+        <MenuBar isAuthenticated={isAuthenticated} logout={logout} isAdmin={isAdmin} />
 
-        <Routes>
-          <Route path="/" element={<ServerForm />} />
-          <Route path="/rated-servers" element={<RatedServers />} />
-          <Route
-            path="/admin"
-            element={
-              <PrivateRoute isAuthenticated={isAuthenticated}>
-                <AdminPanel />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/account"
-            element={
-              <PrivateRoute isAuthenticated={isAuthenticated}>
-                <Account />
-              </PrivateRoute>
-            }
-          />
-          <Route path="/reset-password" element={<ResetPassword />} />
-        </Routes>
+        {/* Main Content */}
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={<ServerForm />} />
+            <Route path="/rated-servers" element={<RatedServers />} />
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute isAuthenticated={isAuthenticated}>
+                  <AdminPanel />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/account"
+              element={
+                <PrivateRoute isAuthenticated={isAuthenticated}>
+                  <Account />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          </Routes>
+        </main>
 
-        <Footer />  
+        {/* Footer */}
+        <Footer />
       </div>
     </Router>
   );
