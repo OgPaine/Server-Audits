@@ -3,15 +3,35 @@ import { persist } from 'zustand/middleware';
 import { type User, type Session } from '@supabase/supabase-js';
 import { supabase } from '../api/supabase';
 
-interface AuthStore {
+// Custom error type for auth operations
+class AuthError extends Error {
+  constructor(
+    message: string,
+    public code?: string,
+    public originalError?: unknown
+  ) {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
+
+// Type guard for user roles
+type UserRole = 'admin' | 'user';
+const isUserRole = (role: unknown): role is UserRole => 
+  role === 'admin' || role === 'user';
+
+interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
-  error: string | null;
+  error: AuthError | null;
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
   isUser: boolean;
   sessionExpiration: number | null;
+}
+
+interface AuthActions {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
@@ -21,26 +41,62 @@ interface AuthStore {
   resetError: () => void;
 }
 
+interface AuthStore extends AuthState, AuthActions {}
+
+const initialState: AuthState = {
+  isAuthenticated: false,
+  isLoading: false,
+  error: null,
+  user: null,
+  session: null,
+  isAdmin: false,
+  isUser: false,
+  sessionExpiration: null,
+};
+
+const handleAuthError = (error: unknown): AuthError => {
+  if (error instanceof AuthError) return error;
+  if (error instanceof Error) {
+    return new AuthError(error.message, undefined, error);
+  }
+  return new AuthError('An unexpected error occurred', undefined, error);
+};
+
 export const useAuthStore = create<AuthStore>()(
   persist(
-    (set, get) => {
+    (set, get, store) => {
       let authListener: (() => void) | null = null;
 
+      // Cleanup subscription when auth state changes
+      store.subscribe((state, prevState) => {
+        if (!state.isAuthenticated && prevState.isAuthenticated) {
+          authListener?.();
+          authListener = null;
+        }
+      });
+
+      const updateAuthState = (session: Session | null) => {
+        const userRole = session?.user?.user_metadata?.role;
+        const validRole = isUserRole(userRole) ? userRole : null;
+
+        set({
+          isAuthenticated: !!session,
+          user: session?.user ?? null,
+          session,
+          isAdmin: validRole === 'admin',
+          isUser: validRole === 'user',
+          sessionExpiration: session?.expires_at || null,
+        });
+      };
+
       return {
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-        user: null,
-        session: null,
-        isAdmin: false,
-        isUser: false,
-        sessionExpiration: null,
+        ...initialState,
 
         checkSessionExpiration: () => {
           const { session, logout } = get();
-          if (session && session.expires_at) {
+          if (session?.expires_at) {
             const currentTime = Math.floor(Date.now() / 1000);
-            if (session.expires_at < currentTime) {
+            if (session.expires_at <= currentTime) {
               console.warn('Session expired. Logging out.');
               logout();
             }
@@ -52,51 +108,28 @@ export const useAuthStore = create<AuthStore>()(
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
             if (sessionError) throw sessionError;
 
-            const userRole = session?.user?.user_metadata?.role || null;
+            updateAuthState(session);
 
-            set({
-              isAuthenticated: !!session,
-              user: session?.user ?? null,
-              session,
-              isAdmin: userRole === 'admin',
-              isUser: userRole === 'user',
-              sessionExpiration: session?.expires_at || null,
-            });
-
+            // Clean up existing listener
             if (authListener) {
               authListener();
             }
 
+            // Set up new auth state listener
             const { data: { subscription } } = supabase.auth.onAuthStateChange(
               (_event, session) => {
-                const userRole = session?.user?.user_metadata?.role || null;
-                set({
-                  isAuthenticated: !!session,
-                  user: session?.user ?? null,
-                  session,
-                  isAdmin: userRole === 'admin',
-                  isUser: userRole === 'user',
-                  sessionExpiration: session?.expires_at || null,
-                });
+                updateAuthState(session);
               }
             );
 
             authListener = () => subscription.unsubscribe();
           } catch (error) {
-            if (error instanceof Error) {
-              console.error('Auth check error:', error.message);
-              set({
-                error: error.message,
-                isAuthenticated: false,
-                user: null,
-                session: null,
-                isAdmin: false,
-                isUser: false,
-                sessionExpiration: null,
-              });
-            } else {
-              console.error('Unexpected error:', error);
-            }
+            const authError = handleAuthError(error);
+            console.error('Auth check error:', authError);
+            set({
+              ...initialState,
+              error: authError,
+            });
           }
         },
 
@@ -118,37 +151,20 @@ export const useAuthStore = create<AuthStore>()(
 
             if (!data.session) {
               set({
-                error: 'Please check your email for verification link',
+                error: new AuthError('Please check your email for verification link'),
                 isLoading: false,
               });
               return;
             }
 
-            set({
-              isAuthenticated: true,
-              user: data.user,
-              session: data.session,
-              isAdmin: false,
-              isUser: true,
-              sessionExpiration: data.session.expires_at || null,
-              error: null,
-            });
+            updateAuthState(data.session);
           } catch (error) {
-            if (error instanceof Error) {
-              console.error('Signup error:', error.message);
-              set({
-                error: error.message,
-                isAuthenticated: false,
-                user: null,
-                session: null,
-                isAdmin: false,
-                isUser: false,
-                sessionExpiration: null,
-              });
-            } else {
-              console.error('Unexpected signup error:', error);
-            }
-            throw error;
+            const authError = handleAuthError(error);
+            console.error('Signup error:', authError);
+            set({
+              ...initialState,
+              error: authError,
+            });
           } finally {
             set({ isLoading: false });
           }
@@ -164,13 +180,9 @@ export const useAuthStore = create<AuthStore>()(
 
             if (error) throw error;
           } catch (error) {
-            if (error instanceof Error) {
-              console.error('Password reset error:', error.message);
-              set({ error: error.message });
-            } else {
-              console.error('Unexpected password reset error:', error);
-            }
-            throw error;
+            const authError = handleAuthError(error);
+            console.error('Password reset error:', authError);
+            set({ error: authError });
           } finally {
             set({ isLoading: false });
           }
@@ -188,36 +200,17 @@ export const useAuthStore = create<AuthStore>()(
             if (error) throw error;
 
             if (!data.session) {
-              throw new Error('No session returned from login');
+              throw new AuthError('No session returned from login');
             }
 
-            const userRole = data.user?.user_metadata?.role || null;
-
-            set({
-              isAuthenticated: true,
-              user: data.user,
-              session: data.session,
-              isAdmin: userRole === 'admin',
-              isUser: userRole === 'user',
-              sessionExpiration: data.session.expires_at || null,
-              error: null,
-            });
+            updateAuthState(data.session);
           } catch (error) {
-            if (error instanceof Error) {
-              console.error('Login error:', error.message);
-              set({
-                error: error.message,
-                isAuthenticated: false,
-                user: null,
-                session: null,
-                isAdmin: false,
-                isUser: false,
-                sessionExpiration: null,
-              });
-            } else {
-              console.error('Unexpected login error:', error);
-            }
-            throw error;
+            const authError = handleAuthError(error);
+            console.error('Login error:', authError);
+            set({
+              ...initialState,
+              error: authError,
+            });
           } finally {
             set({ isLoading: false });
           }
@@ -230,25 +223,13 @@ export const useAuthStore = create<AuthStore>()(
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
 
-            set({
-              isAuthenticated: false,
-              user: null,
-              session: null,
-              error: null,
-              isAdmin: false,
-              isUser: false,
-              sessionExpiration: null,
-            });
+            set(initialState);
           } catch (error) {
-            if (error instanceof Error) {
-              console.error('Logout error:', error.message);
-              set({
-                error: error.message,
-              });
-            } else {
-              console.error('Unexpected logout error:', error);
-            }
-            throw error;
+            const authError = handleAuthError(error);
+            console.error('Logout error:', authError);
+            set({
+              error: authError,
+            });
           } finally {
             set({ isLoading: false });
           }
@@ -270,9 +251,3 @@ export const useAuthStore = create<AuthStore>()(
     }
   )
 );
-
-// Periodically check session expiration
-setInterval(() => {
-  const authStore = useAuthStore.getState();
-  authStore.checkSessionExpiration();
-}, 60 * 1000);

@@ -5,11 +5,12 @@ import Signup from '../auth/Signup';
 
 interface MenuBarProps {
   isAuthenticated: boolean;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAdmin: boolean;
+  onLoginClick: () => void;
 }
 
-const MenuBar: React.FC<MenuBarProps> = ({ isAuthenticated, logout, isAdmin}) => {
+const MenuBar: React.FC<MenuBarProps> = ({isAuthenticated, logout, isAdmin, onLoginClick }) => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
 

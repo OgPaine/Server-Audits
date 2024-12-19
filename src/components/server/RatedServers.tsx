@@ -2,13 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useSubmissionStore } from '../../store/submissionStore';
 import { Icon } from '@iconify/react';
 import { ServerSubmission } from '../../api/supabase';
-import { supabase } from '../../api/supabase';
 
 const RatedServers: React.FC = () => {
   const { submissions, isLoading, error, fetchSubmissions } = useSubmissionStore();
   const [rankedSubmissions, setRankedSubmissions] = useState<ServerSubmission[]>([]);
-  const [communityRatings, setCommunityRatings] = useState<Record<string, { total: number; count: number }>>({});
-  const [userRating, setUserRating] = useState<Record<string, number>>({});
 
   useEffect(() => {
     fetchSubmissions();
@@ -21,67 +18,6 @@ const RatedServers: React.FC = () => {
     }
   }, [submissions]);
 
-  useEffect(() => {
-    const fetchCommunityRatings = async () => {
-      const { data, error } = await supabase
-        .from('server_ratings')
-        .select('server_id, rating');
-
-      if (error) {
-        console.error('Error fetching ratings:', error);
-        return;
-      }
-
-      const ratings = data?.reduce((acc: Record<string, { total: number; count: number }>, curr) => {
-        const { server_id, rating } = curr;
-        if (!acc[server_id]) {
-          acc[server_id] = { total: 0, count: 0 };
-        }
-        acc[server_id].total += rating;
-        acc[server_id].count += 1;
-        return acc;
-      }, {});
-
-      setCommunityRatings(ratings || {});
-    };
-
-    fetchCommunityRatings();
-  }, []);
-
-  const handleRateServer = async (serverId: string, rating: number) => {
-    try {
-      const { error } = await supabase.from('server_ratings').insert({
-        server_id: serverId,
-        rating,
-        user_id: supabase.auth.user()?.id,
-      });
-
-      if (error) {
-        console.error('Error submitting rating:', error);
-        return;
-      }
-
-      setCommunityRatings((prevRatings) => {
-        const currentRating = prevRatings[serverId] || { total: 0, count: 0 };
-        const updatedRating = {
-          total: currentRating.total + rating,
-          count: currentRating.count + 1,
-        };
-        return {
-          ...prevRatings,
-          [serverId]: updatedRating,
-        };
-      });
-
-      setUserRating((prevUserRating) => ({
-        ...prevUserRating,
-        [serverId]: rating,
-      }));
-    } catch (error) {
-      console.error('Error handling rating:', error);
-    }
-  };
-
   const serverTypeStyles: Record<string, string> = {
     vanilla: 'bg-blue-600',
     modded: 'bg-green-600',
@@ -93,7 +29,7 @@ const RatedServers: React.FC = () => {
   const TableHeader = () => (
     <thead className="bg-[#374151] text-[#C2D5DB]">
       <tr>
-        {['Server', 'Type', 'Rating', 'Links', 'Community Rating'].map((heading) => (
+        {['Server', 'Type', 'Rating', 'Links'].map((heading) => (
           <th
             key={heading}
             className="px-6 py-3 text-xs font-semibold tracking-wider text-left uppercase"
@@ -105,86 +41,50 @@ const RatedServers: React.FC = () => {
     </thead>
   );
 
-  const TableRow = ({ submission }: { submission: ServerSubmission }) => {
-    const communityRating = communityRatings[submission.id];
-    const averageRating = communityRating
-      ? (communityRating.total / communityRating.count).toFixed(1)
-      : 'N/A';
-
-    return (
-      <tr key={submission.id} className="cursor-pointer text-gray-300 hover:bg-[#2D3748]">
-        <td className="px-6 py-4">
-          <div>
-            <div className="font-medium">{submission.name}</div>
-            <div className="text-xs text-gray-400">{submission.server_ip}</div>
-          </div>
-        </td>
-        <td className="px-6 py-4">
-          <span
-            className={`px-2 py-1 text-xs text-white rounded ${getServerTypeStyle(
-              submission.server_type
-            )}`}
-          >
-            {submission.server_type}
-          </span>
-        </td>
-        <td className="px-6 py-4">{submission.rating || 'N/A'}</td>
-        <td className="px-6 py-4">
-          <div className="flex space-x-2">
-            {submission.website && (
-              <a
-                href={submission.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300"
-              >
-                <Icon icon="ant-design:link-outlined" className="w-6 h-6" />
-              </a>
-            )}
-            {submission.discord && (
-              <a
-                href={submission.discord}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300"
-              >
-                <Icon icon="cib:discord" className="w-6 h-6" />
-              </a>
-            )}
-          </div>
-        </td>
-        <td className="px-6 py-4">
-          <div className="space-y-2">
-            <div>Average: {averageRating}</div>
-            <div className="flex items-center space-x-2">
-              <input
-                type="number"
-                min="0"
-                max="10"
-                step="0.1"
-                className="w-16 px-2 py-1 text-black rounded"
-                value={userRating[submission.id] || ''}
-                onChange={(e) =>
-                  setUserRating({
-                    ...userRating,
-                    [submission.id]: parseFloat(e.target.value) || 0,
-                  })
-                }
-              />
-              <button
-                className="px-3 py-1 text-xs font-semibold text-white bg-blue-600 rounded hover:bg-blue-500"
-                onClick={() =>
-                  handleRateServer(submission.id, userRating[submission.id] || 0)
-                }
-              >
-                Rate Server
-              </button>
-            </div>
-          </div>
-        </td>
-      </tr>
-    );
-  };
+  const TableRow = ({ submission }: { submission: ServerSubmission }) => (
+    <tr key={submission.id} className="cursor-pointer text-gray-300 hover:bg-[#2D3748]">
+      <td className="px-6 py-4">
+        <div>
+          <div className="font-medium">{submission.name}</div>
+          <div className="text-xs text-gray-400">{submission.server_ip}</div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <span
+          className={`px-2 py-1 text-xs text-white rounded ${getServerTypeStyle(
+            submission.server_type
+          )}`}
+        >
+          {submission.server_type}
+        </span>
+      </td>
+      <td className="px-6 py-4">{submission.rating || 'N/A'}</td>
+      <td className="px-6 py-4">
+        <div className="flex space-x-2">
+          {submission.website && (
+            <a
+              href={submission.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300"
+            >
+              <Icon icon="ant-design:link-outlined" className="w-6 h-6" />
+            </a>
+          )}
+          {submission.discord && (
+            <a
+              href={submission.discord}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300"
+            >
+              <Icon icon="cib:discord" className="w-6 h-6" />
+            </a>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
 
   const renderContent = () => {
     if (isLoading) return <div className="text-white">Loading ranked submissions...</div>;

@@ -118,7 +118,7 @@ export const ServerForm: React.FC = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-300">
-              Is your Rust Server Vanilla or Modded? *
+              Is your Rust Server Vanilla or Modded? <span className="text-red-500">*</span>
             </label>
             <div className="mt-2 space-x-6">
               <label className="inline-flex items-center">
